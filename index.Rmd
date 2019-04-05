@@ -1,6 +1,8 @@
 --- 
 title: "Bioinformatics tools and pipelines using R and CWL"
-author: "Qiang Hu"
+author: 
+- "Qiang Hu"
+- "Song Liu"
 date: "`r Sys.Date()`"
 site: bookdown::bookdown_site
 output: bookdown::gitbook
@@ -49,7 +51,9 @@ The **cwltool** is the reference implementation of the Common Workflow Language,
 
 ## Docker
 
-The Docker containers simplify software installation and management. Especially for bioinformatics tools, such toolos often require different runtime environments and library dependcies. For the build workflow, the software required for the installation itself is a big challenge. A CWL runner can perform this work automatically by pulling the Docker containers and adjusting the paths of input files. However, the Docker requirements are optional. CWL scripts can also be run locally with all the dependencies installed.
+The Docker containers simplify software installation and management. Especially for bioinformatics tools, such toolos often require different runtime environments and library dependcies. For the build workflow, the software required for the installation itself is a big challenge. A CWL runner can perform this work automatically by pulling the Docker containers and mounting the paths of input files. 
+
+However, the Docker requirements are optional. CWL scripts can also be run locally with all the dependencies installed.
 
 ## Structure of the book
 
