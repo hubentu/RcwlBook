@@ -30,7 +30,7 @@ BiocManager::install(c("Rcwl", "RcwlPipelines"))
 BiocManager::install(c("hubentu/Rcwl", "hubentu/RcwlPipelines"))
 ```
 
-Load the packages into R session.
+To load the packages into R session:
 ```{r}
 library(Rcwl)
 library(RcwlPipelines)
