@@ -16,9 +16,9 @@ description: "A manual to wrap Bioinformatics tools and workflows with Common Wo
 
 # Preface {-}
 
-This short book introduces the R packages, **Rcwl** and **RcwlPipelines**, to improve the way of building, managing and running Bioinformatics tools and workflows. 
+This short book introduces the R packages, **Rcwl** and **RcwlPipelines**, to improve the way of building, managing and running Bioinformatics tools and pipelines. 
 
-The **Rcwl** package is built on top of the Common Workflow Language (CWL), and provides a simple and user-friendly way to wrap command line tools into data analysis workflows in R. The **RcwlPipelines** package is a collection of Bioinformatics tools and workflows based on **Rcwl**.
+The **Rcwl** package is built on top of the Common Workflow Language (CWL), and provides a simple and user-friendly way to wrap command line tools into data analysis pipelines in R. The **RcwlPipelines** package is a collection of Bioinformatics tools and pipelines based on **Rcwl**.
 
 ## R package installation
 
