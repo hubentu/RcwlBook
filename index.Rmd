@@ -51,7 +51,7 @@ The **cwltool** is the reference implementation of the Common Workflow Language,
 
 ## Docker
 
-The Docker container simplifies software installation and management, especially for bioinformatics tools requiring different runtime environments and library dependencies. For the build workflow, the software required for the installation itself is a big challenge. A CWL runner can perform this work automatically by pulling the Docker containers and mounting the paths of input files. 
+The Docker container simplifies software installation and management, especially for bioinformatics tools/pipelines requiring different runtime environments and library dependencies. A CWL runner can perform this work automatically by pulling the Docker containers and mounting the paths of input files. 
 
 The Docker requirement is optional, as CWL scripts can also be run locally with all the dependencies pre-installed.
 
