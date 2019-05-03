@@ -20,11 +20,11 @@ environments."
 
 <https://www.commonwl.org/>
 
-- To wrap tool and workflows parameters in a standard format
+- To wrap tool and workflow parameters in a standard format
 
 - Capable of invoking tools from Docker containers
 
-- Used by Broad Institute, TCGA, Galaxy Project, DNAnexus...
+- Widely used...
 
 ## First example
 The main class and constructor function is `cwlParam`, which wrap a command line tool and its parameters in a `cwlParam` object. Let's start with a simple example, `echo hello world`.
