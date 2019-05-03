@@ -6,7 +6,7 @@
   + Heavy BioInfo tools and Pipelines beyond BioC
 
 - Tools to build pipelines and generate reproducible reports are required 
-  + Standardization BioInfo Pipelines for best practice
+  + Standardization of BioInfo Pipelines for best practice
   + Portable pipelines
   + Reproducible analysis and report
   + Easy to use in different platforms
@@ -27,14 +27,14 @@ environments."
 - Widely used...
 
 ## First example
-The main class and constructor function is `cwlParam`, which wrap a command line tool and its parameters in a `cwlParam` object. Let's start with a simple example, `echo hello world`.
+The main class and constructor function is `cwlParam`, which wraps a command line tool and its parameters in a `cwlParam` object. Let's start with a simple example, `echo hello world`.
 
-First, we load the package and then define the input parameter for "echo", a string without a prefix. Just an `id` option required.
+First, we load the package and define the input parameter for "echo", a string without a prefix. Just an `id` option required here:
 ```{r}
 input1 <- InputParam(id = "sth")
 ```
 
-Second, create a `cwlParam` object with `baseCommand` for the command to execute and `InputParamList` for the input parameters.
+Second, we create a `cwlParam` object with `baseCommand` for the command to execute and `InputParamList` for the input parameters.
 ```{r}
 echo <- cwlParam(baseCommand = "echo", inputs = InputParamList(input1))
 ```
@@ -46,7 +46,7 @@ echo
 ```
 
 ## Test run
-The function `runCWL` is used to run the CWL object by invoking the python tool `cwltool`. The return will be a list including the command executed, temporary output and logs. The output directory is the current folder by default, but it can be changed by setting `outdir` option. All standard out and standard error stream can also be printed by setting `stderr = ""`.
+The function `runCWL` is used to run the CWL object by invoking the python tool `cwltool`. The return will be a list including the command executed, temporary output and logs. The output directory is the current folder by default, but it can be changed by setting `outdir` option. All standard out and standard error streams can also be printed by setting `stderr = ""`.
 ```{r}
 r1 <- runCWL(echo, outdir = tempdir())
 r1
@@ -58,7 +58,7 @@ r1$output
 readLines(r1$output)
 ```
 
-The executed command was returned in the result list. It shows the command that we defined to run.
+The executed command was returned in the result list. It shows the command that we have defined to execute.
 ```{r}
 r1$command
 ```
@@ -67,4 +67,4 @@ The log shows the details of how the `cwltool` works with CWL scripts.
 ```{r}
 r1$log
 ```
-The `runCWL` generated two scripts with the default `tempfile` prefix, the tool wrapper CWL file and the input YML file. The `cwltool` parse the two scripts and translate them to the command shown before. The output is not defined in the `cwlParam` object, so the command output was returned to __stdout__ by default.
+The `runCWL` generated two scripts with the default `tempfile` prefix, the tool wrapper CWL file and the input YML file. The `cwltool` parses the two scripts and translates them into the command shown before. The output is not defined in the `cwlParam` object, so the command output was returned to __stdout__ by default.
