@@ -3,7 +3,9 @@
 ### Essential Input parameters
 For the input parameters, three options need to be defined usually, *id*, *type*, and *prefix*. The type can be *string*, *int*, *long*, *float*, *double*, and so on. More detail can be found at: <https://www.commonwl.org/v1.0/CommandLineTool.html#CWLType>.
 
-Here is an example from [CWL user guide](http://www.commonwl.org/user_guide/03-input/). Here we defined an `echo` with different type of input parameters by `InputParam`. The `stdout` option can be used to caputre the standard output stream to a file.
+A `InputParam` constructor is used to define a list of input objects for the command tool, such as "prefix" for the parameter flags and "position" for the paramter orders. More descriptions are given in the CWL specification <https://www.commonwl.org/v1.0/CommandLineTool.html#CommandLineBinding>.
+
+Here is an example from the CWL user guide(<http://www.commonwl.org/user_guide/03-input/>). Here we defined an `echo` with different type of input parameters by `InputParam`. The `stdout` option can be used to caputre the standard output stream to a file.
 
 ```{r}
 e1 <- InputParam(id = "flag", type = "boolean", prefix = "-f")
@@ -133,4 +135,46 @@ touch <- cwlParam(baseCommand = "touch", inputs = InputParamList(a), outputs = O
 touch$a <- c("a.txt", "b.gz", "c.txt")
 r5 <- runCWL(touch, outdir = tempdir())
 r5$output
+```
+
+### Standard output
+
+The `stdout` option usually is a string or an expression of output
+file name from the command tool. The command's standard output stream
+will be captured to a file written to the designated output
+directory. When the `stdout` field is defined, an output parameter
+with the type of "stdout" should be also assigned with no
+"outputBinding" set.
+
+An example for command tool "cat" is defined with `stdout` field in
+the output, the name of which is passed from the input parameter "p2". 
+
+```{r}
+## define Cat
+p1 <- InputParam(id = "infiles", type = "File[]")
+p2 <- InputParam(id = "outfile", type = "string",
+                 default = "catout.txt", position = -1)
+Cat <- cwlParam(baseCommand = "cat",
+                inputs = InputParamList(p1, p2),
+                stdout = "$(inputs.outfile)")
+## assign inputs
+afile <- file.path(tempdir(), "a.txt")
+bfile <- file.path(tempdir(), "b.txt")
+write("a", afile)
+write("b", bfile)
+Cat$infiles <- list(afile, bfile)
+## run
+r6 <- runCWL(Cat, outdir = tempdir())
+r6$command
+```
+
+```{block2, type='tips'}
+In this example, we used the parameter "p2" to pass the name to the
+standard output.
+
+In the `InputParam` of "p2", the position is assigned to a negative
+value (-1), which means the parameters will not be used in the command
+and only uses for passing variable. To write the "Cat" tool to a CWL
+file, the "inputBinding" field will be skipped for this parameter.
+
 ```
