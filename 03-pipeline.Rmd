@@ -1,7 +1,7 @@
 # Writing Pipeline
-We can connect multiple tools together into a pipeline. Here is an example to uncompress an R script and execute it with `Rscript`.
+We can connect multiple tools into a pipeline. Here is an example to uncompress an R script and execute it with `Rscript`.
 
-Here we define a simple `Rscript` tool without using docker.
+We first define a simple `Rscript` tool without using docker:
 ```{r}
 d1 <- InputParam(id = "rfile", type = "File")
 Rs <- cwlParam(baseCommand = "/usr/bin/Rscript",
@@ -18,7 +18,7 @@ readLines(tres$output)
 
 The pipeline includes two steps, decompressed by `GZ` and compiled by `Rs`. The input file is a compressed file and the output would be the output `Rout` from `Rs`.
 
-First we need to define the direct inputs and outputs from `GZ` and `Rs`.
+First we need to define the direct inputs and outputs from `GZ` and `Rs`:
 ```{r}
 i1 <- InputParam(id = "cwl_zfile", type = "File")
 o1 <- OutputParam(id = "cwl_cout", type = "File", outputSource = "Compile/output")
