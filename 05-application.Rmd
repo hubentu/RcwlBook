@@ -393,17 +393,16 @@ The GATK 4 best practice pipeline for germline variant calling was
 implemented with Workflow Description Language (WDL), which is similar
 to cwl and requires
 [cromwell](https://github.com/broadinstitute/cromwell) to run the
-pipelines. We wrapped the WDL pipeline into 3 steps with `Rcwl`. The
-details of the pipeline can be find here:
-<https://software.broadinstitute.org/gatk/best-practices/workflow?id=11145>
+pipeline. The details of the pipeline can be found here:
+<https://software.broadinstitute.org/gatk/best-practices/workflow?id=11145> 
 
 ![Germline short variant discovery (SNPs + Indels)](https://us.v-cdn.net/5019796/uploads/editor/mz/tzm69d8e2spl.png)
 
-The germline pipelines include 4 steps in WDL, paired fastq to ubam,
+The germline pipeline include 4 steps in WDL, paired fastq to ubam,
 GATK alignment, variant calling by HaplotypeCaller and joint
-genotyping. We wrapped the GATK pipelines to 3 steps using `Rcwl` for
+genotyping. We wrapped the GATK pipeline into 3 steps using `Rcwl` for
 different numbers of computing nodes requirements. The wrapped
-pipelines can help to assign inputs to the input JSON templates and
+pipeline can help to assign inputs to the input JSON templates and
 glob results from the `cromwell` outputs.
 
 1. `GAlign` GATK alignment.
@@ -411,7 +410,7 @@ glob results from the `cromwell` outputs.
 The fastqs, sample information and customized json files for WDL are
 required as inputs. Multiple steps will run in this step, including
 `bwa` alignment, mark duplicates and base quality recalibration. GATK
-ready BAM files will be collected to the output directory.
+ready BAM files will be collected into the output directory.
 
 2. `hapCall` HaplotypeCaller.
 
@@ -424,9 +423,8 @@ in your json file. A "gVCF" files will be generated.
 This step will combine the "gVCF" files and then call germline
 variants in all samples. The paths of the local bundle files are also
 required to be changed in the json template file. The final VCF file
-of germline variants will be collected.
+of germline variants will be generated.
 
-```
 
 ### GATK Alignment
 We wrapped the steps from raw fastqs to analysis-ready BAM file into `GAlign` pipeline. Here is the short summary of the pipeline.
@@ -435,7 +433,7 @@ data(GAlign)
 short(GAlign)
 ```
 
-For the `inputList`, we need to assign the fastqs files and read groups for each sample. The inputs can be multiple items separated by comma if there are more than one read groups for each sample. The input templates and WDL scripts can be assigned in the `paramList` and the reference and other GATK bundle files should be changed to your local version of files accordingly in the local json files. The path to the `cromwell` binary file is also required. Here is an example.
+For the `inputList`, we need to assign the fastqs files and read groups for each sample. The inputs can be multiple items separated by comma if there are more than one read groups for each sample. The input templates and WDL scripts can be assigned in the `paramList`, and the reference and other GATK bundle files in the local json files should be changed accordingly to your local version of files. The path to the `cromwell` binary file is also required. Here is an example:
 
 ```{r, eval=FALSE}
 tmpl1 <- system.file(package="RcwlPipelines", "GATK4/seq-format-conversion/paired-fastq-to-unmapped-bam.inputs.json")
@@ -466,7 +464,7 @@ r1 <- runCWLBatch(GAlign, outdir="apps/DNASeq/output/BAM", inputList, paramList,
                   stderr="")
 ```
 
-The outputs were globbed from the `cromwell` execution folder.
+The outputs were globbed from the `cromwell` execution folder:
 ```{r}
 list.files("apps/DNASeq/output/BAM/normal", recursive = TRUE)
 ```
