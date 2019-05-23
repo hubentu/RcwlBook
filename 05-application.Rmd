@@ -470,7 +470,7 @@ list.files("apps/DNASeq/output/BAM/normal", recursive = TRUE)
 ```
 
 ### HaplotypeCaller
-This step takes the BAM files as input and each BAM file will be assigned to different computing node. Also the json template file need to be modified to the correct GATK bundle paths at first.
+This step takes the BAM files as input and each BAM file will be assigned to different computing nodes. The json template file needs to be modified to include the correct GATK bundle paths first.
 ```{r, eval=FALSE}
 data(hapCall)
 wdl3 <- system.file(package="RcwlPipelines", "GATK4/gatk4-germline-snps-indels/haplotypecaller-gvcf-gatk4.wdl")
@@ -500,7 +500,7 @@ list.files("apps/DNASeq/output/GATK/normal", recursive = TRUE)
 
 
 ### Joint Discovery
-The joint genotyping step will combine the `gvcf` files and then call variants in all samples, so only one computing node is required. Multiple values or files of the samples need to be pasted by comma for each input in the `inputList`. The paths of the local bundle files are also need to be added to the json template file.
+The joint genotyping step will combine the `gvcf` files and then call variants in all samples, so only one computing node is required. Multiple values or files of the samples will need to be seperated by comma for each input in the `inputList`. The paths of the local bundle files will also need to be added to the json template file.
 ```{r, eval=FALSE}
 data(jdCall)
 wdl4 <- system.file(package="RcwlPipelines", "GATK4/gatk4-germline-snps-indels/joint-discovery-gatk4-local.wdl")
