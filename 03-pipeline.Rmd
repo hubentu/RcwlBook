@@ -71,7 +71,7 @@ r8$output
 ```
 
 ## Pipeline plot
-The function `plotCWL` can be used to visualize the relationship of inputs, outputs and the analysis for a tool or pipeline:
+The function `plotCWL` can be used to visualize the relationship of inputs, outputs and the components for a tool or pipeline:
 
 ```{r}
 plotCWL(cwl)
