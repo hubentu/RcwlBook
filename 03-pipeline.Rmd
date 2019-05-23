@@ -9,7 +9,7 @@ Rs <- cwlParam(baseCommand = "/usr/bin/Rscript",
 Rs
 ```
 
-Test run:
+Here is the test run:
 ```{r}
 Rs$rfile <- r4$output
 tres <- runCWL(Rs, outdir = tempdir())
