@@ -4,28 +4,27 @@
 ## RcwlPipelines tools
 ### Rcwl scripts
 The R scripts to build the CWL tools and pipelines based on the `Rcwl`
-package are stored in the "tools" and "pipelines" folder respectively.
-The function `cwlTools` can be used to collect the available scripts.
-The `cachePath` can be your existing cache directory or a new folder.
+package are stored in the "tools" and "pipelines" folder, respectively.
+The function `cwlTools` can be used to catalog the available scripts, where the `cachePath` can be your existing cache directory or a new folder:
 
 ```{r}
 tools <- cwlTools(cachePath = tempdir())
 tools
 ```
 
-The full paths can be pulled from the "fpath" column.
+The full paths can be pulled from the "fpath" column:
 ```{r}
 library(dplyr)
 bfcinfo(tools) %>% select(rname, fpath)
 ```
 
 ### Build a pipeline
-We can develop a pipline by utilizing the available tools. For
-example, a simple alignment pipelines with mapping and marking
+A pipline can be built by utilizing the tools cataloged by the `tools`. 
+For example, a simple alignment pipelines with mapping and marking
 duplicates can be built from the `tools`.
 
 First, we load the required tools, bwa, samtools and picard
-markduplicates.
+markduplicates:
 
 ```{r}
 scripts <- bfcinfo(tools) %>%
@@ -38,7 +37,7 @@ scripts <- bfcinfo(tools) %>%
 invisible(sapply(scripts, source))
 ```
 
-Next, we define the input parameters.
+Next, we define the input parameters:
 ```{r}
 p1 <- InputParam(id = "threads", type = "int")
 p2 <- InputParam(id = "RG", type = "string")
@@ -48,7 +47,7 @@ p5 <- InputParam(id = "FQ2", type = "File?")
 ```
 
 Then we define the pipeline steps, from raw fastqs to duplicates
-marked alignments.
+marked alignments:
 
 ```{r}
 ## bwa
@@ -76,7 +75,7 @@ s5 <- Step(id = "idxBam", run = samtools_index,
            In = list(bam = "markdup/mBam"))
 ```
 
-Last, we define the outputs and connect the steps to a new pipeline.
+Last, we define the outputs and connect the steps to a new pipeline:
 ```{r}
 req1 <- list(class = "StepInputExpressionRequirement")
 req2 <- list(class = "InlineJavascriptRequirement")
@@ -98,13 +97,13 @@ plotCWL(Align)
 ```
 
 ## RcwlPipelines summary
-There are mainly 4 pipelines are collected in this package. Here is a
-breif introduction to these pipelines. More pipelines and tools are
+So far we have built 4 major pipelines in this package. Here is a
+brief introduction to these 4 pipelines. More pipelines and tools are
 expected to be included in the future.
 
 ## DNASeq alignment pipeline
 The pipeline can be used to preprocess DNA sequences in fastq
-format. It can take paired fastqs, read groups from multiple batches
+format. It can take paired fastqs and read groups from multiple batches
 as input.
 
 ```{r}
@@ -115,7 +114,7 @@ inputs(alignMerge)
 The pipeline includes two steps and several jobs will be run in each
 step.
 
-1. ``r names(runs(alignMerge))[[1]]``: bwa alignment by read groups.
+1. ``r names(runs(alignMerge))[[1]]``: bwa alignment by read groups:
 ```{r}
 runs(runs(alignMerge)[[1]])
 ```
@@ -126,7 +125,7 @@ runs(runs(alignMerge)[[1]])
    * `sortBam`: To sort the "bam" file by coordinates with `samtools`.
    * `idxBam`: To index "bam" file with `samtools`.
   
-2. ``r names(runs(alignMerge))[[2]]``: Merge by samples and markduplicates.
+2. ``r names(runs(alignMerge))[[2]]``: To merge by samples and mark duplicates:
 ```{r}
 runs(runs(alignMerge)[[2]])
 ```
@@ -136,21 +135,21 @@ runs(runs(alignMerge)[[2]])
    * `samtools_index`: To index bam file with `samtools`.
    * `samtools_flagstat`: To summarize flags in bam with `samtools`.
 
-The final bam files after duplicates marked, bam index, duplicates
+The final bam files with duplicates marked, bam index, duplicates
 matrix, and flag statistics summary will be in the output folder.
 
 ```{r}
 outputs(alignMerge)
 ```
 
-Here is the short summary and steps plot.
+Here is the short summary and steps plot:
 ```{r}
 short(alignMerge)
 plotCWL(alignMerge)
 ```
 
 ### Prepare data
-Here is an example of two samples. The "sample1" have two lanes of sequences and the "sample2" only has one pair of reads. The lists of reads1 `fq1`, reads2 `fq2`, read groups and output BAM names are defined in the `inputList`. The reference genome and number of threads to run the job are defined in the shared options, `paramList`.
+Here is a simple example of two samples. The "sample1" have two lanes of sequences and the "sample2" has only one pair of reads. The lists of reads1 `fq1`, reads2 `fq2`, read groups and output BAM names are defined in the `inputList`. The reference genome and number of threads to run the job are defined in the shared options, `paramList`:
 
 ```{r, eval=FALSE}
 fq1 <- list(sample1 = list("apps/DNASeq/data/fq1_1.fq",
@@ -188,38 +187,38 @@ dir("apps/DNASeq/output/BAM/sample1")
 ## RNASeq pipeline
 The pipeline was built with reads quality summary, `STAR` alignment,
 quantification by `featureCounts` and `RSeQC` quality control. Here
-are the inputs.
+are the inputs:
 
 ```{r}
 data(rnaseq_Sf)
 inputs(rnaseq_Sf)
 ```
 
-The pipeline includes 6 steps.
+The pipeline includes 6 steps:
 
 * `fastqc`: To run quality summary for raw fastqs with `fastqc`.
 * `STAR`: To align fastqs with `STAR`.
 * `samtools_index`: To index aligned bam file.
-* `samtools_flagstat`: To summary alignment flags.
+* `samtools_flagstat`: To summarize alignment flags.
 * `featureCounts`: To quantify gene abundances.
 * `RSeQC`: Several steps included.\
 	- `gtfToGenePred`: To convert GTF annotation to "genePred" format.
 	- `genePredToBed`: To convert "genePred" annotation to "bed" format.
-	- `r_distribution`: To run reads distribution over genome features.
+	- `r_distribution`: To summarize reads distribution over genome features.
 	- `gCoverage`: To summarize read coverage over gene body.
 
 The outputs and logs from alignment, quantification and QC steps are
-collected together to the output folder. A final QC report could be
+collected together into the output folder. A final QC report could be
 generated by `multiqc`, which is also available in the data package.
 
-Here are the short summary and steps plot.
+Here are the short summary and steps plot:
 ```{r}
 short(rnaseq_Sf)
 plotCWL(rnaseq_Sf)
 ```
 
 ### Prepare data
-An RNASeq test data set can be downloaded from [genomedata](http://genomedata.org/rnaseq-tutorial/HBR_UHR_ERCC_ds_5pc.tar), which includes pair-end fastqs for 6 samples.
+An RNASeq test data set can be downloaded from [genomedata](http://genomedata.org/rnaseq-tutorial/HBR_UHR_ERCC_ds_5pc.tar), which includes paired-end fastqs for 6 samples.
 ```{r, eval=FALSE}
 download.file("http://genomedata.org/rnaseq-tutorial/HBR_UHR_ERCC_ds_5pc.tar", "apps/RNASeq/data/HBR_UHR_ERCC_ds_5pc.tar)
 untar("apps/RNASeq/data/HBR_UHR_ERCC_ds_5pc.tar", exdir = "apps/RNASeq/data/")
@@ -229,11 +228,11 @@ The input data must be in a named list, with the same names as the input list of
 
 There are two different input lists, `inputList` and `paramList`. The `inputList` is used to define the inputs for each sample and will be submitted to different cluster nodes. The `paramList` is used to define parameters which are shared in all jobs.
 
-Two following inputs should be listed in `inputList`.
+Two following inputs should be listed in `inputList`:
 
 * `in_seqfiles`: A list with the fastq files of each sample in each element. The names of the list are also required to be defined and can be the sample IDs. The length of the list will be the same as the number of samples, thus the list will be defined to `inputList` and assigned to different nodes for parallel computing.
 
-* `in_prefix` The same as `in_seqfiles`, which define a list of sample IDs.
+* `in_prefix` is the same as `in_seqfiles`, which defines a list of sample IDs.
 
 ```{r}
 files <- normalizePath(list.files("apps/RNASeq/data/", ".gz", full.names = TRUE))
@@ -242,7 +241,7 @@ inputList <- list(in_seqfiles = files,
                   in_prefix = as.list(names(files)))
 ```
 
-These 3 parameter will be defined in `paramList`.
+These 3 parameter will be defined in `paramList`:
 
 * `in_genomeDir`: The reference genome indexes for STAR.
 
@@ -258,14 +257,14 @@ paramList <- list(
 )
 ```
 
-In some case, we need to modify the default arguments in some steps of a pipeline. For example,
+In some cases, we need to modify the default arguments in some steps of a pipeline. For example,
 ```{r}
 arguments(rnaseq_Sf, "STAR")[[2]] <- "2"
 head(arguments(rnaseq_Sf, "STAR"))
 ```
 
 ### Submit pipeline with SGE
-The function `runCWLBatch` is used to submit the pipeline to cluster server. In addition to defining `inputList` and `paramList`, we need to define parallel parameters from the `BiocParallel` package. Here, we use "sge" to submit the jobs. The "sge" template is a bash script with some predefined parameters for "qsub". The nodes queue name and number of slots/threads are variables from the template and can be assigned by the `resources` list. 
+The function `runCWLBatch` is used to submit the pipeline to cluster server. In addition to defining `inputList` and `paramList`, we need to define parallel parameters from the `BiocParallel` package. Here is an example where we use "sge" to submit the jobs. The "sge" template is a bash script with some predefined parameters for "qsub". The nodes queue name and number of slots/threads are variables from the template and can be assigned by the `resources` list. 
 
 ```{r, eval=FALSE}
 res <- runCWLBatch(cwl = rnaseq_Sf, outdir = "apps/RNASeq/output/",
@@ -285,14 +284,14 @@ dir("apps/RNASeq/output/HBR_Rep1")
 ```
 
 ### Summarize QC
-The tool "multiqc" can aggregate results from the multiple outputs of the pipeline and generate a single page report, which also was implemented in the `RcwlPipelines` package.
+The tool "multiqc" can aggregate results from the multiple outputs of the pipeline and generate a single page report, which also was implemented in the `RcwlPipelines` package:
 
-We can also run the tool using `Rcwl` locally with option `docker = TRUE`.
 ```{r, eval=FALSE}
 data(multiqc)
 multiqc$dir <- "apps/RNASeq/output"
 multiqc
 ```
+We can also run the tool using `Rcwl` locally with the option `docker = TRUE`:
 
 ```{r, eval=FALSE}
 runCWL(multiqc, stderr = "", Args = "--preserve-entire-environment", docker = FALSE)
@@ -303,7 +302,7 @@ runCWL(multiqc, stderr = "", Args = "--preserve-entire-environment", docker = FA
 <https://hubentu.github.io/others/multiqc_report.html>
 
 ## MC3 somatic variant calling pipeline
-The Multi-Center Mutation Calling in Multiple Cancers project (MC3) pipeline was developed by TCGA to generate a comprehensive encyclopedia of somatic mutation calls by applying an ensemble of seven mutation-calling algorithms with scoring and artifact filtering. More details can be found in this paper:
+The Multi-Center Mutation Calling in Multiple Cancers project (MC3) pipeline was developed by TCGA to generate a comprehensive encyclopedia of somatic mutation calls. MC3 works by applying an ensemble of seven mutation-calling algorithms with scoring and artifact filtering. More details can be found in this paper:
 [Scalable Open Science Approach for Mutation Calling of Tumor Exomes Using Multiple Genomic Pipelines](https://www.cell.com/fulltext/S2405-4712(18)30096-6)
 
 The `mc3` pipeline is available at <https://github.com/OpenGenomics/mc3>. All required software have been deployed in cloud with docker.
@@ -311,9 +310,10 @@ The `mc3` pipeline is available at <https://github.com/OpenGenomics/mc3>. All re
 The pipeline has been imported and contained in the `RcwlPipelines` pacakge, which contains two major steps (markID step was removed):
 
 - Call variants by 7 pipelines
+
 - Merge VCF and convert to MAF
 
-The steps of the pipeline was built on the CWL files from its github repository, which were also contained in the package. Thereforce, we need the load the pipleine by sourcing it from the script.
+The steps of the pipeline was built on the CWL files from its github repository, which were also contained in the package. Thereforce, we need to load the pipleine by sourcing it from the script.
 
 ```{r}
 bfcinfo(tools) %>% filter(rname == "mc3") %>% pull(rpath) %>% source
@@ -322,26 +322,26 @@ plotCWL(mc3)
 ```
 
 Two steps are included.\
-1. `call_variants`: To call variants by 7 pipelines.
+1. `call_variants`: To call variants by 7 pipelines:
 ```{r}
 callVar <- readCWL(runs(mc3)$call_variants)
 plotCWL(callVar)
 ```
 
-2. `covert`: To merge VCFs and convert to MAF
+2. `covert`: To merge VCFs and convert to MAF:
 ```{r}
 conv <- readCWL(runs(mc3)$convert)
 plotCWL(conv)
 ```
 
 The merged VCF and converted MAF files will be collected to the output
-folder.
+folder:
 
 ```{r}
 outputs(mc3)
 ```
 
-```
+
 
 ### Prepare data
 Testing somatic mutation data can be download from: <https://github.com/genome/somatic-snv-test-data>.
@@ -376,13 +376,14 @@ res <- runCWLBatch(mc3, outdir = "apps/DNASeq/output/mc3",
 ```
 
 The final VCF was filtered and merged from the outputs of different
-pipelines and annotated by VEP. The converted MAF file was also
-generated.
+pipelines and annotated by VEP:
 
 ```{r}
 dir("apps/DNASeq/output/mc3/test")
 ```
 
+The converted MAF file was also
+generated:
 ```{r}
 vcf <- read.table("apps/DNASeq/output/mc3/test/merged.vep.vcf", sep="\t")
 head(vcf)
