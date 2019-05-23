@@ -376,14 +376,13 @@ res <- runCWLBatch(mc3, outdir = "apps/DNASeq/output/mc3",
 ```
 
 The final VCF was filtered and merged from the outputs of different
-pipelines and annotated by VEP:
+callers and annotated by VEP:
 
 ```{r}
 dir("apps/DNASeq/output/mc3/test")
 ```
 
-The converted MAF file was also
-generated:
+The merged VCF file was converted to MAF file:
 ```{r}
 vcf <- read.table("apps/DNASeq/output/mc3/test/merged.vep.vcf", sep="\t")
 head(vcf)
