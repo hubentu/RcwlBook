@@ -1,7 +1,7 @@
 # Run approaches
 
 ## Running Tools in Docker
-The CWL can work with docker to simplify your software management and communicate files between host and container. The docker container can be defined by the `hints` or `requirements` option.
+The CWL can work with docker to simplify your software management and communicate files between host and container. The docker container can be defined by the `hints` or `requirements` option:
 ```{r}
 d1 <- InputParam(id = "rfile", type = "File")
 req1 <- list(class = "DockerRequirement",
@@ -23,8 +23,7 @@ r6a <- runCWL(doc, docker = FALSE, outdir = tempdir(),
 ```
 
 ## Running Tools in Cluster server
-The CWL also can work in high performance clusters with batch-queuing system, such as SGE, PBS, SLURM and so on, using the Bioconductor package `BiocParallel`. Here is an example to submit jobs with "Multiicore" and "SGE". A more detailed example can be found (<https://hubentu.github.io/others/Rcwl_RNASeq.html>).
-
+The CWL can also work in high performance clusters with batch-queuing system, such as SGE, PBS, SLURM and so on, using the Bioconductor package `BiocParallel`. Here is an example to submit jobs with "Multiicore" and "SGE", seperately: 
 ```{r, eval=FALSE}
 library(BiocParallel)
 sth.list <- as.list(LETTERS)
@@ -40,9 +39,12 @@ result2 <- runCWLBatch(cwl = echo, outdir = tempdir(), inputList = list(sth = st
                                                  resources = list(queue = "all.q")))
 ```
 
+A more detailed example can be found (<https://hubentu.github.io/others/Rcwl_RNASeq.html>).
+
+
 ## Web Application
 ### cwlParam example
-Here we build a tool with different types of input parameters.
+Here we build a tool with different types of input parameters:
 ```{r}
 e1 <- InputParam(id = "flag", type = "boolean",
                  prefix = "-f", doc = "boolean flag")
@@ -61,7 +63,7 @@ mulEcho
 ```
 
 ### cwlParam to Shiny App
-Some input parameters can be predefined in a list, which will be converted to select options in the webapp. An `upload` parameter can be used to defined wether to generate an upload interface for the file type option. If FALSE, the upload field will be text input (file path) instead of file input.
+Some input parameters can be predefined in a list, which will be converted to selected options in the webapp. An `upload` parameter can be used to generate an upload interface for the file type option. If `FALSE` is set for `upload`, the upload field will be text input (file path) instead of file input.
 ```{r, eval=FALSE}
 inputList <- list(option = c("option1", "option2"))
 app <- cwlShiny(mulEcho, inputList, upload = TRUE)
