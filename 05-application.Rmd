@@ -4,37 +4,46 @@
 ## RcwlPipelines tools
 ### Rcwl scripts
 The R scripts to build the CWL tools and pipelines based on the `Rcwl`
-package are stored in the "tools" and "pipelines" folder, respectively.
-The function `cwlTools` can be used to catalog the available scripts, where the `cachePath` can be your existing cache directory or a new folder:
+package are stored in the "src" folder with "tl_" and "pl_" prefix
+respectively. The function `cwlTools` can be used to collect the
+available scripts.  The `cachePath` can be your existing cache
+directory or a new folder.
 
 ```{r}
 tools <- cwlTools(cachePath = tempdir())
 tools
 ```
 
-The full paths can be pulled from the "fpath" column:
+The full paths can be pulled from the "fpath" column. The scripts can
+be viewed to demonstrate how the tools and pipelines were built.
 ```{r}
 library(dplyr)
 bfcinfo(tools) %>% select(rname, fpath)
 ```
 
+The commands and docker containers from the wrapped tools are included
+in the metadata.
+```{r}
+tls <- bfcinfo(tools) %>% filter(Type == "tool") %>%
+    select(rname, Command, Container)
+```
+
+```{r, results = 'asis'}
+knitr::kable(tls)
+```
+
 ### Build a pipeline
-A pipline can be built by utilizing the tools cataloged by the `tools`. 
-For example, a simple alignment pipelines with mapping and marking
+We can develop a pipline by utilizing the available tools. For
+example, a simple alignment pipelines with mapping and marking
 duplicates can be built from the `tools`.
 
-First, we load the required tools, bwa, samtools and picard
-markduplicates:
+First, we check whether the required tools (bwa, samtools and picard
+markduplicates) are available.
 
 ```{r}
-scripts <- bfcinfo(tools) %>%
-    filter(rname %in% c("bwa",
-                        "samtools_samTobam",
-                        "samtools_sortBam",
-                        "samtools_index",
-                        "markdup")) %>%
-    pull(rpath)
-invisible(sapply(scripts, source))
+bfcquery(tools, "bwa|sam2bam|sortBam|samtools_index|markdup") %>%
+    filter(Type == "tool") %>%
+    select(rname, Command, Container)
 ```
 
 Next, we define the input parameters:
@@ -107,16 +116,15 @@ format. It can take paired fastqs and read groups from multiple batches
 as input.
 
 ```{r}
-data(alignMerge)
-inputs(alignMerge)
+inputs(bwaAlignRecal)
 ```
 
 The pipeline includes two steps and several jobs will be run in each
 step.
 
-1. ``r names(runs(alignMerge))[[1]]``: bwa alignment by read groups:
+1. ``r names(runs(bwaAlignRecal))[[1]]``: bwa alignment by read groups:
 ```{r}
-runs(runs(alignMerge)[[1]])
+runs(runs(bwaAlignRecal)[[1]])
 ```
 	
    * `bwa`: To align fastqs and read groups to reference genome with `bwa`.
@@ -125,9 +133,9 @@ runs(runs(alignMerge)[[1]])
    * `sortBam`: To sort the "bam" file by coordinates with `samtools`.
    * `idxBam`: To index "bam" file with `samtools`.
   
-2. ``r names(runs(alignMerge))[[2]]``: To merge by samples and mark duplicates:
+2. ``r names(runs(bwaAlignRecal))[[2]]``: To merge by samples and mark duplicates:
 ```{r}
-runs(runs(alignMerge)[[2]])
+runs(runs(bwaAlignRecal)[[2]])
 ```
 
    * `mergeBam`: To merge bam files from multiple batches with `picard`.
@@ -135,17 +143,32 @@ runs(runs(alignMerge)[[2]])
    * `samtools_index`: To index bam file with `samtools`.
    * `samtools_flagstat`: To summarize flags in bam with `samtools`.
 
-The final bam files with duplicates marked, bam index, duplicates
-matrix, and flag statistics summary will be in the output folder.
+3. ``r names(runs(bwaAlignRecal))[[3]]``: To apply TCGA
+   BaseRecalibrator and ApplyBQSR.
+```{r}
+runs(runs(bwaAlignRecal)[[3]])
+```
+
+   * `BaseRecalibrator`: To Generates recalibration table for Base
+     Quality Score Recalibration with `gatk BaseRecalibrator`.
+   * `ApplyBQSR`: To Apply base quality score recalibration with `gatk ApplyBQSR`.
+   * `samtools_index`: To index bam file with `samtools`.
+   * `samtools_flagstat`: To summarize flags in bam with `samtools`.
+   * `samtools_stats`: To collects statistics from BAM file with
+     `samtools`.
+
+The final bam files with duplicates marked and base quality
+recalibration, bam index, duplicates matrix, and statistics summaries
+will be in the output folder.
 
 ```{r}
-outputs(alignMerge)
+outputs(bwaAlignRecal)
 ```
 
 Here is the short summary and steps plot:
 ```{r}
-short(alignMerge)
-plotCWL(alignMerge)
+short(bwaAlignRecal)
+plotCWL(bwaAlignRecal)
 ```
 
 ### Prepare data
@@ -158,30 +181,35 @@ fq1 <- list(sample1 = list("apps/DNASeq/data/fq1_1.fq",
 fq2 <- list(sample1 = list("apps/DNASeq/data/fq1_2.fq",
                            "apps/DNASeq/data/fq2_2.fq"),
             sample2 = list("apps/DNASeq/data/fq1_2.fq"))
-rgs <- list(sample1 = list("@RG\\tID:sample1.1\\tSM:sample1",
-                           "@RG\\tID:sample1.2\\tSM:sample1"),
-            sample2 = list("@RG\\tID:sample2.1\\tSM:sample2"))
+rgs <- list(sample1 = list("@RG\\tID:sample1.1\\tPL:Illumina\\tSM:sample1",
+                           "@RG\\tID:sample1.2\\tPL:Illumina\\tSM:sample1"),
+            sample2 = list("@RG\\tID:sample2.1\\tPL:Illumina\\tSM:sample2"))
 samples <- list(sample1 = "sample1.bam", sample2 = "sample2.bam")
 
-inputList <- list(idBam = samples, RG= rgs, FQ1s = fq1, FQ2s = fq2) 
+inputList <- list(outBam = samples, RG = rgs, FQ1s = fq1, FQ2s = fq2)
 paramList <- list(threads = 2,
-                  Ref = "apps/data/hs37d5.fa")
+                  Ref = "apps/data/hs37d5.fa",
+                  knowSites = list("apps/data/dbsnp_138.b37.vcf",
+                                   "apps/data/Mills_and_1000G_gold_standard.indels.b37.vcf"))
+
 ```
 
 ### Run in cluster
 ```{r, eval=FALSE}
-res <- runCWLBatch(alignMerge, outdir = "output/BAM",
+res <- runCWLBatch(bwaAlignRecal, outdir = "apps/DNASeq/output/BAM",
                    inputList = inputList, paramList = paramList,
                    BPPARAM = BatchtoolsParam(workers = 2, cluster = "sge",
-                                             template = "apps/data/sge.tmpl",
+                                             template = "/rpcc/bioinformatics/sge_centos7.tmpl",
                                              resources = list(jobname="bwa",
                                                               threads = 2,
-                                                              queue = "all.q")))
+                                                              queue = "centos7.q"),
+                                             log=TRUE, logdir=".", progressbar = T),
+                   docker = FALSE, stderr = "")
 ```
 
 List outputs:
 ```{r}
-dir("apps/DNASeq/output/BAM/sample1")
+dir("apps/DNASeq/output/BAM/sample2")
 ```
 
 ## RNASeq pipeline
@@ -190,7 +218,6 @@ quantification by `featureCounts` and `RSeQC` quality control. Here
 are the inputs:
 
 ```{r}
-data(rnaseq_Sf)
 inputs(rnaseq_Sf)
 ```
 
@@ -287,7 +314,6 @@ dir("apps/RNASeq/output/HBR_Rep1")
 The tool "multiqc" can aggregate results from the multiple outputs of the pipeline and generate a single page report, which also was implemented in the `RcwlPipelines` package:
 
 ```{r, eval=FALSE}
-data(multiqc)
 multiqc$dir <- "apps/RNASeq/output"
 multiqc
 ```
@@ -305,15 +331,20 @@ runCWL(multiqc, stderr = "", Args = "--preserve-entire-environment", docker = FA
 The Multi-Center Mutation Calling in Multiple Cancers project (MC3) pipeline was developed by TCGA to generate a comprehensive encyclopedia of somatic mutation calls. MC3 works by applying an ensemble of seven mutation-calling algorithms with scoring and artifact filtering. More details can be found in this paper:
 [Scalable Open Science Approach for Mutation Calling of Tumor Exomes Using Multiple Genomic Pipelines](https://www.cell.com/fulltext/S2405-4712(18)30096-6)
 
-The `mc3` pipeline is available at <https://github.com/OpenGenomics/mc3>. All required software have been deployed in cloud with docker.
+The `mc3` pipeline is available at
+<https://github.com/OpenGenomics/mc3>. All required software have been
+deployed in cloud with docker.
 
-The pipeline has been imported and contained in the `RcwlPipelines` pacakge, which contains two major steps (markID step was removed):
+The pipeline has been imported and contained in the `RcwlPipelines`
+pacakge, which contains two major steps (markID step was removed):
 
 - Call variants by 7 pipelines
 
 - Merge VCF and convert to MAF
 
-The steps of the pipeline was built on the CWL files from its github repository, which were also contained in the package. Thereforce, we need to load the pipleine by sourcing it from the script.
+The steps of the pipeline was built on the CWL files from its github
+repository, which were also contained in the package. Thereforce, we
+need to load the pipleine by sourcing it from the script.
 
 ```{r}
 bfcinfo(tools) %>% filter(rname == "mc3") %>% pull(rpath) %>% source
@@ -340,8 +371,6 @@ folder:
 ```{r}
 outputs(mc3)
 ```
-
-
 
 ### Prepare data
 Testing somatic mutation data can be download from: <https://github.com/genome/somatic-snv-test-data>.
@@ -429,7 +458,6 @@ of germline variants will be generated.
 ### GATK Alignment
 We wrapped the steps from raw fastqs to analysis-ready BAM file into `GAlign` pipeline. Here is the short summary of the pipeline.
 ```{r}
-data(GAlign)
 short(GAlign)
 ```
 
@@ -472,7 +500,6 @@ list.files("apps/DNASeq/output/BAM/normal", recursive = TRUE)
 ### HaplotypeCaller
 This step takes the BAM files as input and each BAM file will be assigned to different computing nodes. The json template file needs to be modified to include the correct GATK bundle paths first.
 ```{r, eval=FALSE}
-data(hapCall)
 wdl3 <- system.file(package="RcwlPipelines", "GATK4/gatk4-germline-snps-indels/haplotypecaller-gvcf-gatk4.wdl")
 tmpl3 <- system.file(package="RcwlPipelines", "GATK4/gatk4-germline-snps-indels/haplotypecaller-gvcf-gatk4.hg38.inputs.local.json")
 
@@ -502,7 +529,6 @@ list.files("apps/DNASeq/output/GATK/normal", recursive = TRUE)
 ### Joint Discovery
 The joint genotyping step will combine the `gvcf` files and then call variants in all samples, so only one computing node is required. Multiple values or files of the samples will need to be seperated by comma for each input in the `inputList`. The paths of the local bundle files will also need to be added to the json template file.
 ```{r, eval=FALSE}
-data(jdCall)
 wdl4 <- system.file(package="RcwlPipelines", "GATK4/gatk4-germline-snps-indels/joint-discovery-gatk4-local.wdl")
 tmpl4 <- system.file(package="RcwlPipelines", "GATK4/gatk4-germline-snps-indels/joint-discovery-gatk4-local.hg38.wgs.inputs.json")
 

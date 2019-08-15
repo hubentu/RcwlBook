@@ -2,7 +2,7 @@
 title: "Bioinformatics tools and pipelines using R and CWL"
 author: 
 - "Qiang Hu"
-- "Song Liu"
+- "Qian Liu"
 date: "`r Sys.Date()`"
 site: bookdown::bookdown_site
 output: bookdown::gitbook
